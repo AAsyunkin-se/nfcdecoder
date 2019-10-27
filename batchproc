@@ -1,0 +1,6 @@
+FILES="./sniffs/*.txt"
+for f in $FILES
+do
+	echo "Processing $f"
+	python3 ./nfcdecoder.py "$f"
+done

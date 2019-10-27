@@ -1,0 +1,432 @@
+[
+    {
+        #APDU request
+        'value': [],
+        'cmdlen': 0,
+        # 5 bytes mandatory: CLA INS P1 P2 Lc/Le
+        'datalen': 5,
+        'src': 'PCD',
+        'label': 'ApduPcd',
+        'state_cur': DecoderState.PROT4,
+        'state_nxt': DecoderState.SAME,
+        'log': 'Command APDU (PCD)',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 Class (CLA)'
+                },
+                {
+                    # 0x0X
+                    'offset': 0,
+                    'test_bits_off': BitMask.B7|BitMask.B6|BitMask.B5|BitMask.B4,
+                    'log': 'Byte 0 B7..4 Structure and coding compliant with ISO/IEC 7816-4/7/8',
+                    'proc': 'parseCLA3210'
+                },
+                {
+                    # 0x8X, 0x9X
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7,
+                    'test_bits_off': BitMask.B6|BitMask.B5,
+                    'log': 'Byte 0 B7..4 Structure compliant with ISO/IEC 7816-4; user-specific coding and meaning of commands and responses (private use)',
+                    'proc': 'parseCLA3210'
+                },
+                {
+                    # 0xAX
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7|BitMask.B5,
+                    'test_bits_off': BitMask.B6|BitMask.B4,
+                    'log': 'Byte 0 B7..4 Structure and codes compliant with ISO/IEC 7816-4; specified in supplementary documents (e.g. GSM 11.11)',
+                    'proc': 'parseCLA3210'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1 Instruction (INS)'
+                },
+                {
+                    'offset': 1,
+                    'log':'READ BINARY',
+                    'value':0xb0
+                },
+                {
+                    'offset': 1,
+                    'log':'WRITE BINARY',
+                    'value':0xd0
+                },
+                {
+                    'offset': 1,
+                    'log':'UPDATE BINARY',
+                    'value':0xd6
+                },
+                {
+                    'offset': 1,
+                    'log':'ERASE BINARY',
+                    'value':0x0e
+                },
+                {
+                    'offset': 1,
+                    'log':'READ RECORD(S)',
+                    'value':0xb2
+                },
+                {
+                    'offset': 1,
+                    'log':'WRITE RECORD',
+                    'value':0xd2
+                },
+                {
+                    'offset': 1,
+                    'log':'APPEND RECORD',
+                    'value':0xe2
+                },
+                {
+                    'offset': 1,
+                    'log':'UPDATE DATA',
+                    'value':0xdc
+                },
+                {
+                    'offset': 1,
+                    'log':'GET DATA',
+                    'value':0xca
+                },
+                {
+                    'offset': 1,
+                    'log':'PUT DATA',
+                    'value':0xda
+                },
+                {
+                    'offset': 1,
+                    'log':'SELECT FILE',
+                    'value':0xa4
+                },
+                {
+                    'offset': 1,
+                    'log':'VERIFY',
+                    'value':0x20
+                },
+                {
+                    'offset': 1,
+                    'log':'INTERNAL AUTHENTICATE',
+                    'value':0x88
+                },
+                {
+                    'offset': 1,
+                    'log':'EXTERNAL AUTHENTICATE',
+                    'value':0x82
+                },
+                {
+                    'offset': 1,
+                    'log':'GET CHALLENGE',
+                    'value':0x84
+                },
+                {
+                    'offset': 1,
+                    'log':'MANAGE CHANNEL',
+                    'value':0x70
+                },
+                {
+                    'offset': 1,
+                    'log':'ENVELOPE',
+                    'value':0xc2
+                },
+                {
+                    'offset': 1,
+                    'log':'GET RESPONSE',
+                    'value':0xc0
+                },
+                {
+                    'offset': 1,
+                    'log':'EMV; Get Processing Options (GPO)',
+                    'value':0xa8
+                },
+                {
+                    'offset': 1,
+                    'log':'EMV; Generate AC',
+                    'value':0xae
+                },
+                {
+                    'offset': 1,
+                    'log':'EMV; Card Block',
+                    'value':0x16
+                },
+                {
+                    'offset': 1,
+                    'log':'EMV; Application Unblock',
+                    'value':0x18
+                },
+                {
+                    'offset': 1,
+                    'log':'EMV; Application Block',
+                    'value':0x1e
+                },
+                {
+                    'offset': 1,
+                    'log':'EMV; Pin Change/Unblock',
+                    'value':0x24
+                },
+                {
+                    'offset': 1,
+                    'log':'Mifare; Get Version',
+                    'value':0x60
+                },
+                {
+                    'offset': 2,
+                    'log': 'Byte 2 Parameter 1 (P1)'
+                },
+                {
+                    'offset': 3,
+                    'log': 'Byte 3 Parameter 2 (P2)'
+                },
+                {
+                   #this can either be Lc or Le (or nothing!), so no logging from script
+                    'offset': 4,
+                    'proc': 'parseApduDataPCD'
+                },
+            ]
+    },
+    {
+        #APDU response
+        'value': [],
+        'cmdlen': 0,
+        # 2 bytes mandatory: SW1 SW2
+        'datalen': 2,
+        'src': 'PICC',
+        'label': 'ApduPicc',
+        'state_cur': DecoderState.PROT4,
+        'state_nxt': DecoderState.SAME,
+        'log': 'Response APDU (PICC)',
+        'data':
+            [
+               { 'offset': -2, 'value': [ 0x61 ], 'log':'Command successfully executed; Response bytes are available and can be requested using GET RESPONSE.' },
+               { 'offset': -1, 'value': [ 0x62, 0x00 ], 'log':'No information given (NV-Ram not changed)' },
+               { 'offset': -1, 'value': [ 0x62, 0x01 ], 'log':'NV-Ram not changed 1.' },
+               { 'offset': -1, 'value': [ 0x62, 0x81 ], 'log':'Part of returned data may be corrupted' },
+               { 'offset': -1, 'value': [ 0x62, 0x82 ], 'log':'End of file/record reached before reading Le bytes' },
+               { 'offset': -1, 'value': [ 0x62, 0x83 ], 'log':'Selected file invalidated' },
+               { 'offset': -1, 'value': [ 0x62, 0x84 ], 'log':'Selected file is not valid. FCI not formated according to ISO' },
+               { 'offset': -1, 'value': [ 0x62, 0x85 ], 'log':'No input data available from a sensor on the card. No Purse Engine enslaved for R3bc' },
+               { 'offset': -1, 'value': [ 0x62, 0xA2 ], 'log':'Wrong R-MAC' },
+               { 'offset': -1, 'value': [ 0x62, 0xA4 ], 'log':'Card locked (during reset( ))' },
+               { 'offset': -1, 'value': [ 0x62, 0xC0 ], 'log':'Counter with value 0 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC1 ], 'log':'Counter with value 1 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC2 ], 'log':'Counter with value 2 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC3 ], 'log':'Counter with value 3 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC4 ], 'log':'Counter with value 4 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC5 ], 'log':'Counter with value 5 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC6 ], 'log':'Counter with value 6 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC7 ], 'log':'Counter with value 7 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC8 ], 'log':'Counter with value 8 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xC9 ], 'log':'Counter with value 9 (command dependent)' },
+               { 'offset': -1, 'value': [ 0x62, 0xF1 ], 'log':'Wrong C-MAC' },
+               { 'offset': -1, 'value': [ 0x62, 0xF3 ], 'log':'Internal reset' },
+               { 'offset': -1, 'value': [ 0x62, 0xF5 ], 'log':'Default agent locked' },
+               { 'offset': -1, 'value': [ 0x62, 0xF7 ], 'log':'Cardholder locked' },
+               { 'offset': -1, 'value': [ 0x62, 0xF8 ], 'log':'Basement is current agent' },
+               { 'offset': -1, 'value': [ 0x62, 0xF9 ], 'log':'CALC Key Set not unblocked' },
+               { 'offset': -1, 'value': [ 0x63, 0x00 ], 'log':'No information given (NV-Ram changed)' },
+               { 'offset': -1, 'value': [ 0x63, 0x81 ], 'log':'File filled up by the last write. Loading/updating is not allowed.' },
+               { 'offset': -1, 'value': [ 0x63, 0x82 ], 'log':'Card key not supported.' },
+               { 'offset': -1, 'value': [ 0x63, 0x83 ], 'log':'Reader key not supported.' },
+               { 'offset': -1, 'value': [ 0x63, 0x84 ], 'log':'Plaintext transmission not supported.' },
+               { 'offset': -1, 'value': [ 0x63, 0x85 ], 'log':'Secured transmission not supported.' },
+               { 'offset': -1, 'value': [ 0x63, 0x86 ], 'log':'Volatile memory is not available.' },
+               { 'offset': -1, 'value': [ 0x63, 0x87 ], 'log':'Non-volatile memory is not available.' },
+               { 'offset': -1, 'value': [ 0x63, 0x88 ], 'log':'Key number not valid.' },
+               { 'offset': -1, 'value': [ 0x63, 0x89 ], 'log':'Key length is not correct.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC0 ], 'log':'Verify fail; no try left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC1 ], 'log':'Verify fail; 1 try left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC2 ], 'log':'Verify fail; 2 tries left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC3 ], 'log':'Verify fail; 3 tries left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC4 ], 'log':'Verify fail; 4 tries left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC5 ], 'log':'Verify fail; 5 tries left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC6 ], 'log':'Verify fail; 6 tries left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC7 ], 'log':'Verify fail; 7 tries left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC8 ], 'log':'Verify fail; 8 tries left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xC9 ], 'log':'Verify fail; 9 tries left.' },
+               { 'offset': -1, 'value': [ 0x63, 0xF1 ], 'log':'More data expected.' },
+               { 'offset': -1, 'value': [ 0x63, 0xF2 ], 'log':'More data expected and proactive command pending.' },
+               { 'offset': -1, 'value': [ 0x64, 0x00 ], 'log':'No information given (NV-Ram not changed)' },
+               { 'offset': -1, 'value': [ 0x64, 0x01 ], 'log':'Command timeout. Immediate response required by the card.' },
+               { 'offset': -1, 'value': [ 0x65, 0x00 ], 'log':'No information given' },
+               { 'offset': -1, 'value': [ 0x65, 0x01 ], 'log':'Write error. Memory failure. There have been problems in writing or reading the EEPROM. Other hardware problems may also bring this error.' },
+               { 'offset': -1, 'value': [ 0x65, 0x81 ], 'log':'Memory failure' },
+               { 'offset': -1, 'value': [ 0x66, 0x00 ], 'log':'Error while receiving (timeout)' },
+               { 'offset': -1, 'value': [ 0x66, 0x01 ], 'log':'Error while receiving (character parity error)' },
+               { 'offset': -1, 'value': [ 0x66, 0x02 ], 'log':'Wrong checksum' },
+               { 'offset': -1, 'value': [ 0x66, 0x03 ], 'log':'The current DF file without FCI' },
+               { 'offset': -1, 'value': [ 0x66, 0x04 ], 'log':'No SF or KF under the current DF' },
+               { 'offset': -1, 'value': [ 0x66, 0x69 ], 'log':'Incorrect Encryption/Decryption Padding' },
+               { 'offset': -2, 'value': [ 0x67 ], 'log':'length incorrect (procedure)(ISO 7816-3)' },
+               { 'offset': -1, 'value': [ 0x68, 0x00 ], 'log':'No information given (The request function is not supported by the card)' },
+               { 'offset': -1, 'value': [ 0x68, 0x81 ], 'log':'Logical channel not supported' },
+               { 'offset': -1, 'value': [ 0x68, 0x82 ], 'log':'Secure messaging not supported' },
+               { 'offset': -1, 'value': [ 0x68, 0x83 ], 'log':'Last command of the chain expected' },
+               { 'offset': -1, 'value': [ 0x68, 0x84 ], 'log':'Command chaining not supported' },
+               { 'offset': -1, 'value': [ 0x69, 0x00 ], 'log':'No information given (Command not allowed)' },
+               { 'offset': -1, 'value': [ 0x69, 0x01 ], 'log':'Command not accepted (inactive state)' },
+               { 'offset': -1, 'value': [ 0x69, 0x81 ], 'log':'Command incompatible with file structure' },
+               { 'offset': -1, 'value': [ 0x69, 0x82 ], 'log':'Security condition not satisfied.' },
+               { 'offset': -1, 'value': [ 0x69, 0x83 ], 'log':'Authentication method blocked' },
+               { 'offset': -1, 'value': [ 0x69, 0x84 ], 'log':'Referenced data reversibly blocked (invalidated)' },
+               { 'offset': -1, 'value': [ 0x69, 0x85 ], 'log':'Conditions of use not satisfied.' },
+               { 'offset': -1, 'value': [ 0x69, 0x86 ], 'log':'Command not allowed (no current EF)' },
+               { 'offset': -1, 'value': [ 0x69, 0x87 ], 'log':'Expected secure messaging (SM) object missing' },
+               { 'offset': -1, 'value': [ 0x69, 0x88 ], 'log':'Incorrect secure messaging (SM) data object' },
+               { 'offset': -1, 'value': [ 0x69, 0x8D ], 'log':'Reserved' },
+               { 'offset': -1, 'value': [ 0x69, 0x96 ], 'log':'Data must be updated again' },
+               { 'offset': -1, 'value': [ 0x69, 0xE1 ], 'log':'POL1 of the currently Enabled Profile prevents this action.' },
+               { 'offset': -1, 'value': [ 0x69, 0xF0 ], 'log':'Permission Denied' },
+               { 'offset': -1, 'value': [ 0x69, 0xF1 ], 'log':'Permission Denied – Missing Privilege' },
+               { 'offset': -1, 'value': [ 0x6A, 0x00 ], 'log':'No information given (Bytes P1 and/or P2 are incorrect)' },
+               { 'offset': -1, 'value': [ 0x6A, 0x80 ], 'log':'The parameters in the data field are incorrect.' },
+               { 'offset': -1, 'value': [ 0x6A, 0x81 ], 'log':'Function not supported' },
+               { 'offset': -1, 'value': [ 0x6A, 0x82 ], 'log':'File not found' },
+               { 'offset': -1, 'value': [ 0x6A, 0x83 ], 'log':'Record not found' },
+               { 'offset': -1, 'value': [ 0x6A, 0x84 ], 'log':'There is insufficient memory space in record or file' },
+               { 'offset': -1, 'value': [ 0x6A, 0x85 ], 'log':'Lc inconsistent with TLV structure' },
+               { 'offset': -1, 'value': [ 0x6A, 0x86 ], 'log':'Incorrect P1 or P2 parameter.' },
+               { 'offset': -1, 'value': [ 0x6A, 0x87 ], 'log':'Lc inconsistent with P1-P2' },
+               { 'offset': -1, 'value': [ 0x6A, 0x88 ], 'log':'Referenced data not found' },
+               { 'offset': -1, 'value': [ 0x6A, 0x89 ], 'log':'File already exists' },
+               { 'offset': -1, 'value': [ 0x6A, 0x8A ], 'log':'DF name already exists.' },
+               { 'offset': -1, 'value': [ 0x6A, 0xF0 ], 'log':'Wrong parameter value' },
+               { 'offset': -2, 'value': [ 0x6B ], 'log':'Reference incorrect (procedure bytes P1-P2); (ISO 7816-3)' },
+               { 'offset': -2, 'value': [ 0x6C ], 'log':'Incorrect P3 length. (Wrong length Le)' },
+               { 'offset': -2, 'value': [ 0x6D ], 'log':'Instruction code not programmed or invalid (procedure byte); (ISO 7816-3)' },
+               { 'offset': -2, 'value': [ 0x6E ], 'log':'Instruction class not supported (procedure byte); (ISO 7816-3)' },
+               { 'offset': -1, 'value': [ 0x6F, 0x00 ], 'log':'Command aborted – more exact diagnosis not possible (e.g.; operating system error).' },
+               { 'offset': -1, 'value': [ 0x6F, 0xFF ], 'log':'Card dead (overuse; etc)' },
+               { 'offset': -1, 'value': [ 0x90, 0x00 ], 'log':'Command successfully executed (OK).' },
+               { 'offset': -1, 'value': [ 0x90, 0x04 ], 'log':'PIN not succesfully verified; 3 or more PIN tries left' },
+               { 'offset': -1, 'value': [ 0x90, 0x08 ], 'log':'Key/file not found' },
+               { 'offset': -1, 'value': [ 0x90, 0x80 ], 'log':'Unblock Try Counter has reached zero' },
+               { 'offset': -1, 'value': [ 0x91, 0x00 ], 'log':'OK' },
+               { 'offset': -1, 'value': [ 0x91, 0x01 ], 'log':'States.activity; States.lock Status or States.lockable has wrong value' },
+               { 'offset': -1, 'value': [ 0x91, 0x02 ], 'log':'Transaction number reached its limit' },
+               { 'offset': -1, 'value': [ 0x91, 0x0C ], 'log':'No changes' },
+               { 'offset': -1, 'value': [ 0x91, 0x0E ], 'log':'Insufficient NV-Memory to complete command' },
+               { 'offset': -1, 'value': [ 0x91, 0x1C ], 'log':'Command code not supported' },
+               { 'offset': -1, 'value': [ 0x91, 0x1E ], 'log':'CRC or MAC does not match data' },
+               { 'offset': -1, 'value': [ 0x91, 0x40 ], 'log':'Invalid key number specified' },
+               { 'offset': -1, 'value': [ 0x91, 0x7E ], 'log':'Length of command string invalid' },
+               { 'offset': -1, 'value': [ 0x91, 0x9D ], 'log':'Not allow the requested command' },
+               { 'offset': -1, 'value': [ 0x91, 0x9E ], 'log':'Value of the parameter invalid' },
+               { 'offset': -1, 'value': [ 0x91, 0xA0 ], 'log':'Requested AID not present on PICC' },
+               { 'offset': -1, 'value': [ 0x91, 0xA1 ], 'log':'Unrecoverable error within application' },
+               { 'offset': -1, 'value': [ 0x91, 0xAE ], 'log':'Authentication status does not allow the requested command' },
+               { 'offset': -1, 'value': [ 0x91, 0xAF ], 'log':'Additional data frame is expected to be sent' },
+               { 'offset': -1, 'value': [ 0x91, 0xBE ], 'log':'Out of boundary' },
+               { 'offset': -1, 'value': [ 0x91, 0xC1 ], 'log':'Unrecoverable error within PICC' },
+               { 'offset': -1, 'value': [ 0x91, 0xCA ], 'log':'Previous Command was not fully completed' },
+               { 'offset': -1, 'value': [ 0x91, 0xCD ], 'log':'PICC was disabled by an unrecoverable error' },
+               { 'offset': -1, 'value': [ 0x91, 0xCE ], 'log':'Number of Applications limited to 28' },
+               { 'offset': -1, 'value': [ 0x91, 0xDE ], 'log':'File or application already exists' },
+               { 'offset': -1, 'value': [ 0x91, 0xEE ], 'log':'Could not complete NV-write operation due to loss of power' },
+               { 'offset': -1, 'value': [ 0x91, 0xF0 ], 'log':'Specified file number does not exist' },
+               { 'offset': -1, 'value': [ 0x91, 0xF1 ], 'log':'Unrecoverable error within file' },
+               { 'offset': -1, 'value': [ 0x92, 0x00 ], 'log':'Writing to EEPROM successful after 0 attempts.' },
+               { 'offset': -1, 'value': [ 0x92, 0x01 ], 'log':'Writing to EEPROM successful after 1 attempts.' },
+               { 'offset': -1, 'value': [ 0x92, 0x02 ], 'log':'Writing to EEPROM successful after 2 attempts.' },
+               { 'offset': -1, 'value': [ 0x92, 0x03 ], 'log':'Writing to EEPROM successful after 3 attempts.' },
+               { 'offset': -1, 'value': [ 0x92, 0x04 ], 'log':'Writing to EEPROM successful after 4 attempts.' },
+               { 'offset': -1, 'value': [ 0x92, 0x05 ], 'log':'Writing to EEPROM successful after 5 attempts.' },
+               { 'offset': -1, 'value': [ 0x92, 0x10 ], 'log':'Insufficient memory. No more storage available.' },
+               { 'offset': -1, 'value': [ 0x92, 0x40 ], 'log':'Writing to EEPROM not successful.' },
+               { 'offset': -1, 'value': [ 0x93, 0x01 ], 'log':'Integrity error' },
+               { 'offset': -1, 'value': [ 0x93, 0x02 ], 'log':'Candidate S2 invalid' },
+               { 'offset': -1, 'value': [ 0x93, 0x03 ], 'log':'Application is permanently locked' },
+               { 'offset': -1, 'value': [ 0x94, 0x00 ], 'log':'No EF selected.' },
+               { 'offset': -1, 'value': [ 0x94, 0x01 ], 'log':'Candidate currency code does not match purse currency' },
+               { 'offset': -1, 'value': [ 0x94, 0x02 ], 'log':'Candidate amount too high' },
+               { 'offset': -1, 'value': [ 0x94, 0x02 ], 'log':'Address range exceeded.' },
+               { 'offset': -1, 'value': [ 0x94, 0x03 ], 'log':'Candidate amount too low' },
+               { 'offset': -1, 'value': [ 0x94, 0x04 ], 'log':'FID not found; record not found or comparison pattern not found.' },
+               { 'offset': -1, 'value': [ 0x94, 0x05 ], 'log':'Problems in the data field' },
+               { 'offset': -1, 'value': [ 0x94, 0x06 ], 'log':'Required MAC unavailable' },
+               { 'offset': -1, 'value': [ 0x94, 0x07 ], 'log':'Bad currency : purse engine has no slot with R3bc currency' },
+               { 'offset': -1, 'value': [ 0x94, 0x08 ], 'log':'R3bc currency not supported in purse engine' },
+               { 'offset': -1, 'value': [ 0x94, 0x08 ], 'log':'Selected file type does not match command.' },
+               { 'offset': -1, 'value': [ 0x95, 0x80 ], 'log':'Bad sequence' },
+               { 'offset': -1, 'value': [ 0x96, 0x81 ], 'log':'Slave not found' },
+               { 'offset': -1, 'value': [ 0x97, 0x00 ], 'log':'PIN blocked and Unblock Try Counter is 1 or 2' },
+               { 'offset': -1, 'value': [ 0x97, 0x02 ], 'log':'Main keys are blocked' },
+               { 'offset': -1, 'value': [ 0x97, 0x04 ], 'log':'PIN not succesfully verified; 3 or more PIN tries left' },
+               { 'offset': -1, 'value': [ 0x97, 0x84 ], 'log':'Base key' },
+               { 'offset': -1, 'value': [ 0x97, 0x85 ], 'log':'Limit exceeded – C-MAC key' },
+               { 'offset': -1, 'value': [ 0x97, 0x86 ], 'log':'SM error – Limit exceeded – R-MAC key' },
+               { 'offset': -1, 'value': [ 0x97, 0x87 ], 'log':'Limit exceeded – sequence counter' },
+               { 'offset': -1, 'value': [ 0x97, 0x88 ], 'log':'Limit exceeded – R-MAC length' },
+               { 'offset': -1, 'value': [ 0x97, 0x89 ], 'log':'Service not available' },
+               { 'offset': -1, 'value': [ 0x98, 0x02 ], 'log':'No PIN defined.' },
+               { 'offset': -1, 'value': [ 0x98, 0x04 ], 'log':'Access conditions not satisfied; authentication failed.' },
+               { 'offset': -1, 'value': [ 0x98, 0x35 ], 'log':'ASK RANDOM or GIVE RANDOM not executed.' },
+               { 'offset': -1, 'value': [ 0x98, 0x40 ], 'log':'PIN verification not successful.' },
+               { 'offset': -1, 'value': [ 0x98, 0x50 ], 'log':'INCREASE or DECREASE could not be executed because a limit has been reached.' },
+               { 'offset': -1, 'value': [ 0x98, 0x62 ], 'log':'Authentication Error, application specific (incorrect MAC)' },
+               { 'offset': -1, 'value': [ 0x99, 0x00 ], 'log':'1 PIN try left' },
+               { 'offset': -1, 'value': [ 0x99, 0x04 ], 'log':'PIN not succesfully verified; 1 PIN try left' },
+               { 'offset': -1, 'value': [ 0x99, 0x85 ], 'log':'Wrong status – Cardholder lock' },
+               { 'offset': -1, 'value': [ 0x99, 0x86 ], 'log':'Missing privilege' },
+               { 'offset': -1, 'value': [ 0x99, 0x87 ], 'log':'PIN is not installed' },
+               { 'offset': -1, 'value': [ 0x99, 0x88 ], 'log':'Wrong status – R-MAC state' },
+               { 'offset': -1, 'value': [ 0x9A, 0x00 ], 'log':'2 PIN try left' },
+               { 'offset': -1, 'value': [ 0x9A, 0x04 ], 'log':'PIN not succesfully verified; 2 PIN try left' },
+               { 'offset': -1, 'value': [ 0x9A, 0x71 ], 'log':'Wrong parameter value – Double agent AID' },
+               { 'offset': -1, 'value': [ 0x9A, 0x72 ], 'log':'Wrong parameter value – Double agent Type' },
+               { 'offset': -1, 'value': [ 0x9D, 0x05 ], 'log':'Incorrect certificate type' },
+               { 'offset': -1, 'value': [ 0x9D, 0x07 ], 'log':'Incorrect session data size' },
+               { 'offset': -1, 'value': [ 0x9D, 0x08 ], 'log':'Incorrect DIR file record size' },
+               { 'offset': -1, 'value': [ 0x9D, 0x09 ], 'log':'Incorrect FCI record size' },
+               { 'offset': -1, 'value': [ 0x9D, 0x0A ], 'log':'Incorrect code size' },
+               { 'offset': -1, 'value': [ 0x9D, 0x10 ], 'log':'Insufficient memory to load application' },
+               { 'offset': -1, 'value': [ 0x9D, 0x11 ], 'log':'Invalid AID' },
+               { 'offset': -1, 'value': [ 0x9D, 0x12 ], 'log':'Duplicate AID' },
+               { 'offset': -1, 'value': [ 0x9D, 0x13 ], 'log':'Application previously loaded' },
+               { 'offset': -1, 'value': [ 0x9D, 0x14 ], 'log':'Application history list full' },
+               { 'offset': -1, 'value': [ 0x9D, 0x15 ], 'log':'Application not open' },
+               { 'offset': -1, 'value': [ 0x9D, 0x17 ], 'log':'Invalid offset' },
+               { 'offset': -1, 'value': [ 0x9D, 0x18 ], 'log':'Application already loaded' },
+               { 'offset': -1, 'value': [ 0x9D, 0x19 ], 'log':'Invalid certificate' },
+               { 'offset': -1, 'value': [ 0x9D, 0x1A ], 'log':'Invalid signature' },
+               { 'offset': -1, 'value': [ 0x9D, 0x1B ], 'log':'Invalid KTU' },
+               { 'offset': -1, 'value': [ 0x9D, 0x1D ], 'log':'MSM controls not set' },
+               { 'offset': -1, 'value': [ 0x9D, 0x1E ], 'log':'Application signature does not exist' },
+               { 'offset': -1, 'value': [ 0x9D, 0x1F ], 'log':'KTU does not exist' },
+               { 'offset': -1, 'value': [ 0x9D, 0x20 ], 'log':'Application not loaded' },
+               { 'offset': -1, 'value': [ 0x9D, 0x21 ], 'log':'Invalid Open command data length' },
+               { 'offset': -1, 'value': [ 0x9D, 0x30 ], 'log':'Check data parameter is incorrect (invalid start address)' },
+               { 'offset': -1, 'value': [ 0x9D, 0x31 ], 'log':'Check data parameter is incorrect (invalid length)' },
+               { 'offset': -1, 'value': [ 0x9D, 0x32 ], 'log':'Check data parameter is incorrect (illegal memory check area)' },
+               { 'offset': -1, 'value': [ 0x9D, 0x40 ], 'log':'Invalid MSM Controls ciphertext' },
+               { 'offset': -1, 'value': [ 0x9D, 0x41 ], 'log':'MSM controls already set' },
+               { 'offset': -1, 'value': [ 0x9D, 0x42 ], 'log':'Set MSM Controls data length less than 2 bytes' },
+               { 'offset': -1, 'value': [ 0x9D, 0x43 ], 'log':'Invalid MSM Controls data length' },
+               { 'offset': -1, 'value': [ 0x9D, 0x44 ], 'log':'Excess MSM Controls ciphertext' },
+               { 'offset': -1, 'value': [ 0x9D, 0x45 ], 'log':'Verification of MSM Controls data failed' },
+               { 'offset': -1, 'value': [ 0x9D, 0x50 ], 'log':'Invalid MCD Issuer production ID' },
+               { 'offset': -1, 'value': [ 0x9D, 0x51 ], 'log':'Invalid MCD Issuer ID' },
+               { 'offset': -1, 'value': [ 0x9D, 0x52 ], 'log':'Invalid set MSM controls data date' },
+               { 'offset': -1, 'value': [ 0x9D, 0x53 ], 'log':'Invalid MCD number' },
+               { 'offset': -1, 'value': [ 0x9D, 0x54 ], 'log':'Reserved field error' },
+               { 'offset': -1, 'value': [ 0x9D, 0x55 ], 'log':'Reserved field error' },
+               { 'offset': -1, 'value': [ 0x9D, 0x56 ], 'log':'Reserved field error' },
+               { 'offset': -1, 'value': [ 0x9D, 0x57 ], 'log':'Reserved field error' },
+               { 'offset': -1, 'value': [ 0x9D, 0x60 ], 'log':'MAC verification failed' },
+               { 'offset': -1, 'value': [ 0x9D, 0x61 ], 'log':'Maximum number of unblocks reached' },
+               { 'offset': -1, 'value': [ 0x9D, 0x62 ], 'log':'Card was not blocked' },
+               { 'offset': -1, 'value': [ 0x9D, 0x63 ], 'log':'Crypto functions not available' },
+               { 'offset': -1, 'value': [ 0x9D, 0x64 ], 'log':'No application loaded' },
+               { 'offset': -1, 'value': [ 0x9E, 0x00 ], 'log':'PIN not installed' },
+               { 'offset': -1, 'value': [ 0x9E, 0x04 ], 'log':'PIN not succesfully verified; PIN not installed' },
+               { 'offset': -1, 'value': [ 0x9F, 0x00 ], 'log':'PIN blocked and Unblock Try Counter is 3' },
+               { 'offset': -1, 'value': [ 0x9F, 0x04 ], 'log':'PIN not succesfully verified; PIN blocked and Unblock Try Counter is 3' },
+               
+                {
+                   #parse response data if present
+                    'offset': 0,
+                    'proc': 'parseApduDataPICC'
+                },
+
+            ]
+    },
+
+]

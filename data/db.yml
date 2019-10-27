@@ -1,0 +1,843 @@
+[
+    {
+        'value': [0x26],
+        'cmdlen': 1,
+        'datalen': 0,
+        'src': 'PCD',
+        'label': 'REQA',
+        'state_cur': DecoderState.ANY,
+        'state_nxt': DecoderState.REQAWUPA,
+        'log': 'REQA command'
+    },
+    {
+        'value': [0x52],
+        'cmdlen': 1,
+        'datalen': 0,
+        'src': 'PCD',
+        'label': 'WUPA',
+        'state_cur': DecoderState.ANY,
+        'state_nxt': DecoderState.REQAWUPA,
+        'log': 'WUPA command'
+    },
+    {
+        'value': [0x50, 0x00],
+        'cmdlen': 2,
+        'datalen': 0,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'HLTA',
+        'state_cur': DecoderState.ANY,
+        'state_nxt': DecoderState.INIT,
+        'log': 'HLTA command'
+    },
+    {
+        #ATQA
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 2,
+        'src': 'PICC',
+        'label': 'ATQA',
+        'state_cur': DecoderState.REQAWUPA,
+        'state_nxt': DecoderState.ATQA,
+        'log': 'ATQA command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'Byte 0 B7..6 UID size: single (4 bytes)'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B6,
+                    'test_bits_off': BitMask.B7,
+                    'log': 'Byte 0 B7..6 UID size: double (7 bytes)'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7,
+                    'test_bits_off': BitMask.B6,
+                    'log': 'Byte 0 B7..6 UID size: triple (10 bytes)'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7|BitMask.B6,
+                    'log': 'Byte 0 B7..6 RFU'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B4,
+                    'test_bits_off': BitMask.B3|BitMask.B2|BitMask.B1|BitMask.B0,
+                    'log': 'Byte 0 B4..0 Bit frame anticollision'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B3,
+                    'test_bits_off': BitMask.B4|BitMask.B2|BitMask.B1|BitMask.B0,
+                    'log': 'Byte 0 B4..0 Bit frame anticollision'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B2,
+                    'test_bits_off': BitMask.B4|BitMask.B3|BitMask.B1|BitMask.B0,
+                    'log': 'Byte 0 B4..0 Bit frame anticollision'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B1,
+                    'test_bits_off': BitMask.B4|BitMask.B3|BitMask.B2|BitMask.B0,
+                    'log': 'Byte 0 B4..0 Bit frame anticollision'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B0,
+                    'test_bits_off': BitMask.B4|BitMask.B3|BitMask.B2|BitMask.B1,
+                    'log': 'Byte 0 B4..0 Bit frame anticollision'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_off': BitMask.B7,
+                    'log': 'Byte 1 B7 RFU'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_off': BitMask.B6,
+                    'log': 'Byte 1 B6 RFU'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_off': BitMask.B5,
+                    'log': 'Byte 1 B5 RFU'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_off': BitMask.B4,
+                    'log': 'Byte 1 B4 RFU'
+                },
+            ]
+    },
+    {
+        'value': [0x93, 0x20],
+        'cmdlen': 2,
+        'datalen': 0,
+        'src': 'PCD',
+        'label': 'AC1',
+        'state_cur': DecoderState.ATQA,
+        'state_nxt': DecoderState.ANTICOL1,
+        'log': 'SELECT ANTICOLLISION 1 command'
+    },
+    {
+        'value': [0x95, 0x20],
+        'cmdlen': 2,
+        'datalen': 0,
+        'src': 'PCD',
+        'label': 'AC2',
+        'state_cur': '[DecoderState.ATQA, DecoderState.SAK]',
+        'state_nxt': DecoderState.ANTICOL2,
+        'log': 'SELECT ANTICOLLISION 2 command'
+    },
+    {
+        'value': [0x97, 0x20],
+        'cmdlen': 2,
+        'datalen': 0,
+        'src': 'PCD',
+        'label': 'AC3',
+        'state_cur': '[DecoderState.ATQA, DecoderState.SAK]',
+        'state_nxt': DecoderState.ANTICOL3,
+        'log': 'SELECT ANTICOLLISION 3 command'
+    },
+    {
+        'value': [0x93, 0x70],
+        'cmdlen': 2,
+        'datalen': 5,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'SELCL1',
+        'state_cur': '[DecoderState.UID, DecoderState.ATQA]',
+        'state_nxt': DecoderState.SELECT1,
+        'log': 'SELECT Cascade Level 1 command'
+    },
+    {
+        'value': [0x95, 0x70],
+        'cmdlen': 2,
+        'datalen': 5,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'SELCL2',
+        'state_cur': DecoderState.UID,
+        'state_nxt': DecoderState.SELECT2,
+        'log': 'SELECT Cascade Level 2 command'
+    },
+    {
+        'value': [0x97, 0x70],
+        'cmdlen': 2,
+        'datalen': 5,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'SELCL3',
+        'state_cur': DecoderState.UID,
+        'state_nxt': DecoderState.SELECT3,
+        'log': 'SELECT Cascade Level 3 command'
+    },
+    {
+        #AC response
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 5,
+        'src': 'PICC',
+        'label': 'ACrsp1',
+        'state_cur': DecoderState.ANTICOL1,
+        'state_nxt': DecoderState.UID,
+        'log': 'ANTICOLLISION1 UID response command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 UID',
+                    'proc': 'uidClearParts'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1 UID'
+                },
+                {
+                    'offset': 2,
+                    'log': 'Byte 2 UID'
+                },
+                {
+                    'offset': 3,
+                    'log': 'Byte 3 UID',
+                    'proc': 'uidStorePart'
+                },
+                {
+                    'offset': 4,
+                    'log': 'Byte 3 BCC',
+                    'proc': 'uidCheckBCC'
+                },
+            ]
+    },
+    {
+        #AC response
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 5,
+        'src': 'PICC',
+        'label': 'ACrsp2',
+        'state_cur': DecoderState.ANTICOL2,
+        'state_nxt': DecoderState.UID,
+        'log': 'ANTICOLLISION2 UID response command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 UID'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1 UID'
+                },
+                {
+                    'offset': 2,
+                    'log': 'Byte 2 UID'
+                },
+                {
+                    'offset': 3,
+                    'log': 'Byte 3 UID',
+                    'proc': 'uidStorePart'
+                },
+                {
+                    'offset': 4,
+                    'log': 'Byte 3 BCC',
+                    'proc': 'uidCheckBCC'
+                },
+            ]
+    },
+    {
+        #AC response
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 5,
+        'src': 'PICC',
+        'label': 'ACrsp3',
+        'state_cur': DecoderState.ANTICOL3,
+        'state_nxt': DecoderState.UID,
+        'log': 'ANTICOLLISION3 UID response command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 UID'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1 UID'
+                },
+                {
+                    'offset': 2,
+                    'log': 'Byte 2 UID'
+                },
+                {
+                    'offset': 3,
+                    'log': 'Byte 3 UID',
+                    'proc': 'uidStorePart'
+                },
+                {
+                    'offset': 4,
+                    'log': 'Byte 3 BCC',
+                    'proc': 'uidCheckBCC'
+                },
+            ]
+    },
+    {
+        #SAK response
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 3,
+        'crc': 1,
+        'src': 'PICC',
+        'label': 'SAK',
+        'state_cur': '[DecoderState.SELECT1, DecoderState.SELECT2, DecoderState.SELECT3]',
+        'state_nxt': DecoderState.SAK,
+        'log': 'SAK response',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B6,
+                    'log': 'PICC compliant with ISO/IEC 18092 (NFC)'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B5,
+                    'log': 'PICC is compliant with ISO/IEC 14443-4',
+                    'proc': 'setIso4'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_off': BitMask.B5,
+                    'log': 'PICC is NOT compliant with ISO/IEC 14443-4'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B2,
+                    'log': 'Cascade bit: UID is NOT complete'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_off': BitMask.B2,
+                    'log': 'Cascade bit: UID is complete',
+                    'proc': 'uidFinalise'
+                },
+            ]
+    },
+    {
+        'value': [0x60],
+        'cmdlen': 1,
+        'datalen': 3,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'AuthA',
+        'state_cur': DecoderState.SAK,
+        'state_nxt': DecoderState.MIFTOKENRB,
+        'log': 'Mifare Classic Auth A command'
+    },
+    {
+        #AuthA response with token
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 4,
+        'src': 'PICC',
+        'label': 'TokenRB',
+        'state_cur': DecoderState.MIFTOKENRB,
+        'state_nxt': DecoderState.MIFTOKENAB,
+        'log': 'Mifare Classic Auth A response command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 Challenge 1 (Random Number)'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1 Challenge 1 (Random Number)'
+                },
+                {
+                    'offset': 2,
+                    'log': 'Byte 2 Challenge 1 (Random Number)'
+                },
+                {
+                    'offset': 3,
+                    'log': 'Byte 3 Challenge 1 (Random Number)'
+                },
+            ]
+    },
+    {
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 8,
+        'src': 'PCD',
+        'label': 'TokenAB',
+        'state_cur': DecoderState.MIFTOKENAB,
+        'state_nxt': DecoderState.MIFTOKENBA,
+        'log': 'Mifare Classic Auth A command part 2',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 2,
+                    'log': 'Byte 2 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 3,
+                    'log': 'Byte 3 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 4,
+                    'log': 'Byte 4 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 5,
+                    'log': 'Byte 5 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 6,
+                    'log': 'Byte 6 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 7,
+                    'log': 'Byte 7 Challenge 2 (encrypted data)'
+                },
+            ]
+        
+    },
+    {
+        #AuthA response with tokenBA
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 4,
+        'src': 'PICC',
+        'label': 'TokenBA',
+        'state_cur': DecoderState.MIFTOKENBA,
+        'state_nxt': DecoderState.MIFENCRYPTED,
+        'log': 'Mifare Classic Auth A response command part 2',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 2,
+                    'log': 'Byte 2 Challenge 2 (encrypted data)'
+                },
+                {
+                    'offset': 3,
+                    'log': 'Byte 3 Challenge 2 (encrypted data)'
+                },
+            ]
+    },
+    {
+        'value': [0xA0],
+        'cmdlen': 1,
+        'datalen': 1,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'ULWriteA',
+        'state_cur': DecoderState.SAK,
+        'state_nxt': DecoderState.MIFWRITEA,
+        'log': 'Mifare Ultralight Compatibility Write command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 Write address'
+                },
+            ]
+    },
+    {
+        'value': [0x0A],
+        'cmdlen': 1,
+        'datalen': 0,
+        'crc': 0,
+        'src': 'PICC',
+        'label': 'ULWriteACK1',
+        'state_cur': DecoderState.MIFWRITEA,
+        'state_nxt': DecoderState.MIFWRITEB,
+        'log': 'Mifare Ultralight ACK',
+    },
+    {
+        # TODO other NAKs
+        'value': [0x02],
+        'cmdlen': 1,
+        'datalen': 0,
+        'crc': 0,
+        'src': 'PICC',
+        'label': 'ULWriteNAK1',
+        'state_cur': DecoderState.MIFWRITEA,
+        'state_nxt': DecoderState.INIT,
+        'log': 'Mifare Ultralight NAK - EEPROM Error',
+    },
+    {
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 16,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'ULWriteB',
+        'state_cur': DecoderState.MIFWRITEB,
+        'state_nxt': DecoderState.MIFWRITEBA,
+        'log': 'Mifare Ultralight Compatibility Write command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 Write data'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Byte 1 Write data'
+                },
+                {
+                    'offset': 2,
+                    'log': 'Byte 2 Write data'
+                },
+                {
+                    'offset': 3,
+                    'log': 'Byte 3 Write data'
+                },
+            ]
+    },
+    {
+        'value': [0x0A],
+        'cmdlen': 1,
+        'datalen': 0,
+        'crc': 0,
+        'src': 'PICC',
+        'label': 'ULWriteACK2',
+        'state_cur': DecoderState.MIFWRITEBA,
+        'state_nxt': DecoderState.SAK,
+        'log': 'Mifare Ultralight ACK',
+    },
+    {
+        # TODO other NAKs
+        'value': [0x02],
+        'cmdlen': 1,
+        'datalen': 0,
+        'crc': 0,
+        'src': 'PICC',
+        'label': 'ULWriteNAK2',
+        'state_cur': DecoderState.MIFWRITEBA,
+        'state_nxt': DecoderState.INIT,
+        'log': 'Mifare Ultralight NAK - EEPROM Error',
+    },
+    {
+        'value': [0x30],
+        'cmdlen': 1,
+        'datalen': 1,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'ULReadReq',
+        'state_cur': DecoderState.SAK,
+        'state_nxt': DecoderState.MIFREAD,
+        'log': 'Mifare Ultralight Read command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 Read address'
+                },
+            ]
+    },
+    {
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 16,
+        'crc': 1,
+        'src': 'PICC',
+        'label': 'ULReadRsp',
+        'state_cur': DecoderState.MIFREAD,
+        'state_nxt': DecoderState.SAK,
+        'log': 'Mifare Ultralight Read Response',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Bytes 0..15 Read data',
+                    'proc': 'readULData'
+                },
+            ]
+    },
+    {
+        # TODO other NAKs
+        'value': [0x02],
+        'cmdlen': 1,
+        'datalen': 0,
+        'crc': 0,
+        'src': 'PICC',
+        'label': 'ULReadNAK',
+        'state_cur': DecoderState.MIFREAD,
+        'state_nxt': DecoderState.INIT,
+        'log': 'Mifare Ultralight NAK - EEPROM Error',
+    },
+    {
+        #RATS
+        'value': [0xE0],
+        'cmdlen': 1,
+        'datalen': 1,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'RATS',
+        'state_cur': DecoderState.SAK,
+        'state_nxt': DecoderState.RATS,
+        'log': 'Request for Answer to Select (RATS) command',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 B7..4 FSDI (Frame Size for proximity coupling Device Integer)',
+                    'proc': 'saveFSDI'
+                },
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 B3..0 CID (Card Identifier)',
+                    'proc': 'saveCID'
+                },
+            ]
+        
+    },
+    {
+        #ATS
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 1,
+        'crc': 1,
+        'src': 'PICC',
+        'label': 'ATS',
+        'state_cur': DecoderState.RATS,
+        'state_nxt': DecoderState.ATS,
+        'log': 'Answer To Select (ATS) response',
+        'data':
+            [
+                {
+                    'offset': 0,
+                    'log': 'Byte 0 TL Length',
+                    'proc': 'saveATSLen'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_on': BitMask.B7,
+                    'log': 'Format Byte T0 Bit7 RFU'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_off': BitMask.B7,
+                    'log': 'Format Byte T0 Bit7 RFU'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_on': BitMask.B6,
+                    'log': 'Format Byte T0 Bit6 TC(1) is present',
+                    'proc': 'includeATS_TC1'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_on': BitMask.B5,
+                    'log': 'Format Byte T0 Bit5 TB(1) is present',
+                    'proc': 'includeATS_TB1'
+                },
+                {
+                    'offset': 1,
+                    'test_bits_on': BitMask.B4,
+                    'log': 'Format Byte T0 Bit4 TA(1) is present',
+                    'proc': 'includeATS_TA1'
+                },
+                {
+                    'offset': 1,
+                    'log': 'Format Byte T0 B3..0 FSCI (Frame Size for proximity Card Integer)',
+                    'proc': 'saveFSCI'
+                },
+                {
+                    # no elegant solution to parse TA TB TC via engine...
+                    'offset': 2,
+                    'log': 'ATS remaining Bytes',
+                    'proc': 'parseATS'
+                },
+            ]
+        
+    },
+    {
+        #14443-4 protocol data exchange
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 1,
+        'crc': 1,
+        'src': 'PCD',
+        'label': 'ISO4PCD',
+        'state_cur': DecoderState.ATS,
+        'state_nxt': DecoderState.ATS,
+        'log': '14443-4 protocol data exchange PCD',
+        'data':
+            [
+                # PCD I
+                {
+                    'offset': 0,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'Protocol Control Byte (PCB) I-Block',
+                    'proc': 'savePCBI_PCD'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_off': BitMask.B7|BitMask.B6|BitMask.B4,
+                    'log': 'PCB I-Block not Chaining',
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B4,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'PCB I-Block Chaining (#TODO)',
+                    #'proc': 'setPCBChain'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B3,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'PCB CID following (#TODO; not EMV compliant!)',
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B2,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'PCB NAD following (#TODO; not EMV compliant!)',
+                },
+
+                # PCD R
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7,
+                    'test_bits_off': BitMask.B6|BitMask.B4,
+                    'log': 'Protocol Control Byte (PCB) R-Block ACK',
+                    #'proc': 'savePCBR'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7|BitMask.B4,
+                    'test_bits_off': BitMask.B6,
+                    'log': 'Protocol Control Byte (PCB) R-Block NAK',
+                    #'proc': 'savePCBR'
+                },
+
+                # PCD S
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7|BitMask.B6,
+                    'test_bits_off': BitMask.B5|BitMask.B4,
+                    'log': 'Protocol Control Byte (PCB) S-Block DESELECT',
+                    #'proc': 'savePCBR'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7|BitMask.B6|BitMask.B5|BitMask.B4,
+                    'log': 'Protocol Control Byte (PCB) S-Block WTX',
+                    #'proc': 'savePCBR'
+                },
+            ]
+        
+    },
+    {
+        #14443-4 protocol data exchange
+        'value': [],
+        'cmdlen': 0,
+        'datalen': 1,
+        'crc': 1,
+        'src': 'PICC',
+        'label': 'ISO4PICC',
+        'state_cur': DecoderState.ATS,
+        'state_nxt': DecoderState.ATS,
+        'log': '14443-4 protocol data exchange PICC',
+        'data':
+            [
+                # PCD I
+                {
+                    'offset': 0,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'Protocol Control Byte (PCB) I-Block',
+                    'proc': 'savePCBI_PICC'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_off': BitMask.B7|BitMask.B6|BitMask.B4,
+                    'log': 'PCB I-Block not Chaining',
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B4,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'PCB I-Block Chaining (#TODO)',
+                    #'proc': 'setPCBChain'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B3,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'PCB CID following (#TODO; not EMV compliant!)',
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B2,
+                    'test_bits_off': BitMask.B7|BitMask.B6,
+                    'log': 'PCB NAD following (#TODO; not EMV compliant!)',
+                },
+
+                # PCD R
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7,
+                    'test_bits_off': BitMask.B6|BitMask.B4,
+                    'log': 'Protocol Control Byte (PCB) R-Block ACK',
+                    #'proc': 'savePCBR'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7|BitMask.B4,
+                    'test_bits_off': BitMask.B6,
+                    'log': 'Protocol Control Byte (PCB) R-Block NAK',
+                    #'proc': 'savePCBR'
+                },
+
+                # PCD S
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7|BitMask.B6,
+                    'test_bits_off': BitMask.B5|BitMask.B4,
+                    'log': 'Protocol Control Byte (PCB) S-Block DESELECT',
+                    #'proc': 'savePCBR'
+                },
+                {
+                    'offset': 0,
+                    'test_bits_on': BitMask.B7|BitMask.B6|BitMask.B5|BitMask.B4,
+                    'log': 'Protocol Control Byte (PCB) S-Block WTX',
+                    #'proc': 'savePCBR'
+                },
+            ]
+        
+    },
+]
