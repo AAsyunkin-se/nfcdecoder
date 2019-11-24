@@ -31,7 +31,7 @@ This will produce `my_sniff.csv` in the same directory as the source sniff.
 
 If you contribution is about extending the decoder with new protocols, commands etc, then please ensure the source documentation is public access, i.e. not under NDA. Speak to me if in doubt!
 
-* [ ] Binary format support in addition to TXT (Work in progress)
+* [X] Binary format support in addition to TXT (Beta, Work complete, testing in progress)
 * [ ] Help section on how to create your own YAML scripts
 * [ ] Complete UL support including Auth and full range of NAKs
 * [ ] EMV TLV parsing. There are a number of free TLV parsers (e.g. [BP Tools](https://www.eftlab.com/bp-tools/), [TVR Decoder](https://tvr-decoder.appspot.com/t/home) ) but it will be nice to have something inside NfcDecoder as well, similar to [EMV Framework](https://github.com/apuigsech/emv-framework), but up-to-date and Kernel specific

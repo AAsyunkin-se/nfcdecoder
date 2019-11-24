@@ -4,3 +4,9 @@ do
 	echo "Processing $f"
 	python3 ./nfcdecoder.py "$f"
 done
+FILES="./sniffs/*.bin"
+for f in $FILES
+do
+	echo "Processing $f"
+	python3 ./nfcdecoder.py "$f"
+done

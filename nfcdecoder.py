@@ -10,6 +10,8 @@ from apduprocessor import *
 ConsoleDebugOutput = False
 #ConsoleDebugOutput = True
 
+bBinaryMode = False
+
 class NoValue(Enum):
     def __repr__(self):
     	return '<%s.%s>' % (self.__class__.__name__, self.name)
@@ -225,7 +227,11 @@ class FrameDecoder:
 			# 1. check that we have a match of minimum length
 			# 2. check entry's state matches our state machine's state unless DecoderState.ANY is given
 			# 3. check 'command' value matches that of the input frame
-			if (len(self._frameDataL) < (self._entry['cmdlen'] + self._entry['datalen'])):
+			
+			if ('frame_fixedlen' in self._entry):
+				if (len(self._frameDataL) != self._entry['frame_fixedlen']):
+					continue
+			elif (len(self._frameDataL) < (self._entry['cmdlen'] + self._entry['datalen'])):
 				continue
 			
 			if (self._frameDataL[0:self._entry['cmdlen']] == self._entry['value']):
@@ -312,12 +318,118 @@ class FrameTime:
 			raise ValueError("not possible")
 		print("Setting value")
 		self._timeRelativeMicroSec = timeRelativeMicroSec
+
+
+def getBinElement(binFile):
+	fileSize = binFile.seek(-1, 2) + 1
+	binFile.seek(0)
+	if (ConsoleDebugOutput):
+		print('File size is ', fileSize)
+	#for fileOffest in range(0, fileSize):
+	while (binFile.tell() < fileSize):
+		bSuccess = False
+		#fileOffest = binFile.tell()
+		if (ConsoleDebugOutput):
+			print('New element at ', binFile.tell())
+		protOptionsB = binFile.read(1)
+		if (protOptionsB != ''):
+			protOptions = int.from_bytes(protOptionsB, byteorder='little')
+			if (protOptions & BitMask.B3):
+				bStartTimestamp = True
+			else:
+				bStartTimestamp = False
+				
+			if (protOptions & BitMask.B4):
+				bEndTimestamp = True
+			else:
+				bEndTimestamp = False
+				
+			if (protOptions & BitMask.B5):
+				bParity = True
+			else:
+				bParity = False
+				
+			protModulB = binFile.read(1)
+			protModul = int.from_bytes(protModulB, byteorder='little')
+			if (protModul != ''):
+				if (protModul == 1):
+					frameSrc = 'RDR'
+				elif (protModul == 2):
+					frameSrc = 'TAG'
+				else:
+					frameSrc = 'UNK'
+					
+				encLen = binFile.read(2)
+				if (len(encLen) == 2):
+					frameLen = int.from_bytes(encLen, byteorder='little')
+					# already read 4 bytes (length is the length of entire frame)
+					frameLen -= 4
+					frameData = binFile.read(frameLen)
+					if (ConsoleDebugOutput):
+						print('frameLen ', frameLen)
+						print('frameData ', str(" ".join(["{0:02x}".format(x) for x in list(frameData)])))
+					
+					if (len(frameData) == frameLen):
+						dataStartPtr = 0
+						dataEndPtr = frameLen
+						if (bStartTimestamp):
+							startTimestamp = int.from_bytes(frameData[0:4], byteorder='little')
+							dataStartPtr += 4
+						else:
+							startTimestamp = 0
+						if (bEndTimestamp):
+							endTimestamp = int.from_bytes(frameData[-4:], byteorder='little')
+							dataEndPtr -= 4
+						else:
+							endTimestamp = 0
+							
+						bSuccess = True
+						dataBytes = b''
+						parityBytes = b''
+						if (bParity):
+							dataAndParityList = bytearray(frameData[dataStartPtr:dataEndPtr])
+							bOdd = False
+							if ((dataEndPtr-dataStartPtr)%2 == 1):
+								bOdd = True
+								dataAndParityList.append(0)
+								if (ConsoleDebugOutput):
+									print('odd len at ', binFile.tell())
+							try:
+								frameDataIter = struct.iter_unpack('@cc', dataAndParityList)
+							except struct.error:
+								print('struct error! File offset ', binFile.tell())
+								print('frameLen ', frameLen)
+								print('frameData ', str(" ".join(["{0:02x}".format(x) for x in list(frameData)])))
+								print('dataStartPtr ', dataStartPtr)
+								print('dataEndPtr ', dataEndPtr)
+							for byteAndParity in frameDataIter:
+								dataBytes += byteAndParity[0]
+								parityBytes += byteAndParity[1]
+							parityDataSet = set(parityBytes)
+							parityTestSet = set([0,1])
+							diffSet = parityDataSet-parityTestSet
+							if diffSet:
+								print('Error! Parity bytes are not 0 or 1')
+								print('set test ', diffSet)
+								print('dataBytes ', dataBytes)
+								print('parityBytes ', parityBytes)
+						else:
+							dataBytes = frameData[dataStartPtr:dataEndPtr]
+							
+		if (bSuccess):
+			yield bSuccess, "{0:08x}".format(startTimestamp), "{0:08x}".format(endTimestamp), frameSrc, ["{0:02x}".format(x) for x in list(dataBytes)], list(parityBytes)
+		else:
+			yield bSuccess,
+
+def logFrame():
+	pass
+
         
 if __name__ == '__main__':
 
 	if(len(sys.argv) != 2):
 		#print("Usage: %s <Source HydraNFC TXT File> <Output CSV File>" \
-		print("Usage: %s <Source HydraNFC TXT File>" \
+		print("Usage: %s <Source HydraNFC TXT (.txt) or BIN (.bin) File>" \
 		%os.path.basename(sys.argv[0]))
 		sys.exit(2)
 
@@ -327,9 +439,15 @@ if __name__ == '__main__':
 	with open('data/db_apdu.yml', 'r') as f:
 		apduDB = yaml.load(f)
 		
-	nameWoExt = os.path.splitext(sys.argv[1])[0]
+	#nameWoExt = os.path.splitext(sys.argv[1])[0]
+	nameWoExt, extWoName = os.path.splitext(sys.argv[1])
 	
-	infile = open(sys.argv[1], 'r')
+	if (extWoName == '.bin'):
+		bBinaryMode = True
+		infile = open(sys.argv[1], 'rb')
+	else:
+		infile = open(sys.argv[1], 'r')
+		
 	outfile = open(nameWoExt+'.csv', 'w')
 	#outfileApdu = open(nameWoExt+'.apdu', 'w')
 	
@@ -346,67 +464,133 @@ if __name__ == '__main__':
 	headerStr = 'CPU Cycles,Originator,Data Received,Time elapsed in uS,Time Delta in uS,CRC,Data Interpretation,Further Details,APDU,APDU Basic Info,APDU Detailed Info'
 	outfile.write(headerStr+'\n')
 
-	for line in infile:
-		lineNum +=1
-		tabCount = line.count('\t')
-		if(tabCount==2):
-			lineTokenList=line.split('\t')
-			lineDecodedTokenList.clear()
-			
-			frameTimestamp.newFrameTime(lineTokenList[0])
-			
-			lineDecodedTokenList.append(frameTimestamp.timeRelativeMicroSec)
-			lineDecodedTokenList.append(frameTimestamp.timeDeltaMicroSec)
-			
-			dataFrameList = lineTokenList[2].split()
-			lineTokenList[2] = '\"'+" ".join(dataFrameList)+'\"'
-			frameDec.newFrame(dataFrameList, lineTokenList[1], lineNum)
-			
+	if (bBinaryMode):
+		for binElement in getBinElement(infile):
+			lineNum +=1
 			if (ConsoleDebugOutput):
-				frameDec.status()
+				print('element: ', binElement)
+			if (binElement[0] == True):
+				lineTokenList.clear()
+				lineTokenList.append(binElement[1])
+				lineTokenList.append(binElement[3])
+				lineTokenList.append('\"'+" ".join(binElement[4])+'\"')
 				
-			logMainL = lineTokenList+lineDecodedTokenList+frameDec.getLog()
-			logMainStr = ''
-			for logEntry in logMainL:
-				logMainStr += str(logEntry)+','
-			logMainStr += '\n'
-			
-			logDetailL = frameDec.getLogDetail()
-			logDetailStr = ''
-			if (logDetailL != []):
-				for logEntry in logDetailL:
-					logDetailStr += ',,,,,,,'+str(logEntry)+','+'\n'
-					
-			outfile.write(logMainStr)
-			outfile.write(logDetailStr)
-			
-			# apdu details will follow
-			if (procCmdA.isNewApdu):
-				apduData = procCmdA.getNewApdu()
-				#outfile.write(",,,,,,,,%s\n" %  str(" ".join(["{0:02x}".format(x) for x in apduData])))
-				#if (ConsoleDebugOutput):
-				#	print('New apdu ', str(" ".join(["{0:02x}".format(x) for x in apduData])))
-				frameDecApdu.newFrame(apduData, frameDec.frameSrc, lineNum)
+				lineDecodedTokenList.clear()
+
+				frameTimestamp.newFrameTime(binElement[1])
+
+				lineDecodedTokenList.append(frameTimestamp.timeRelativeMicroSec)
+				lineDecodedTokenList.append(frameTimestamp.timeDeltaMicroSec)
+
+				frameDec.newFrame(binElement[4], binElement[3], lineNum)
 				
 				if (ConsoleDebugOutput):
-					print('APDU Frame status: ')
-					frameDecApdu.status()
+					frameDec.status()
 					
-				logMainL = frameDecApdu.getLog()
+				logMainL = lineTokenList+lineDecodedTokenList+frameDec.getLog()
 				logMainStr = ''
 				for logEntry in logMainL:
-					logMainStr += ',,,,,,,,,'+str(logEntry)+','+'\n'
+					logMainStr += str(logEntry)+','
+				logMainStr += '\n'
 				
-				logDetailL = frameDecApdu.getLogDetail()
+				logDetailL = frameDec.getLogDetail()
 				logDetailStr = ''
 				if (logDetailL != []):
 					for logEntry in logDetailL:
-						logDetailStr += ',,,,,,,,,,'+str(logEntry)+','+'\n'
+						logDetailStr += ',,,,,,,'+str(logEntry)+','+'\n'
 						
 				outfile.write(logMainStr)
 				outfile.write(logDetailStr)
-		else:
-			print("Malformed line %d ignored" %(lineNum))
+				
+				# apdu details will follow
+				if (procCmdA.isNewApdu):
+					apduData = procCmdA.getNewApdu()
+					#outfile.write(",,,,,,,,%s\n" %  str(" ".join(["{0:02x}".format(x) for x in apduData])))
+					#if (ConsoleDebugOutput):
+					#	print('New apdu ', str(" ".join(["{0:02x}".format(x) for x in apduData])))
+					frameDecApdu.newFrame(apduData, frameDec.frameSrc, lineNum)
+					
+					if (ConsoleDebugOutput):
+						print('APDU Frame status: ')
+						frameDecApdu.status()
+						
+					logMainL = frameDecApdu.getLog()
+					logMainStr = ''
+					for logEntry in logMainL:
+						logMainStr += ',,,,,,,,,'+str(logEntry)+','+'\n'
+					
+					logDetailL = frameDecApdu.getLogDetail()
+					logDetailStr = ''
+					if (logDetailL != []):
+						for logEntry in logDetailL:
+							logDetailStr += ',,,,,,,,,,'+str(logEntry)+','+'\n'
+							
+					outfile.write(logMainStr)
+					outfile.write(logDetailStr)
+			else:
+				print('element parsing error at frame: ', lineNum)
+	else:
+		for line in infile:
+			lineNum +=1
+			tabCount = line.count('\t')
+			if(tabCount==2):
+				lineTokenList=line.split('\t')
+				lineDecodedTokenList.clear()
+				
+				frameTimestamp.newFrameTime(lineTokenList[0])
+				
+				lineDecodedTokenList.append(frameTimestamp.timeRelativeMicroSec)
+				lineDecodedTokenList.append(frameTimestamp.timeDeltaMicroSec)
+				
+				dataFrameList = lineTokenList[2].split()
+				lineTokenList[2] = '\"'+" ".join(dataFrameList)+'\"'
+				frameDec.newFrame(dataFrameList, lineTokenList[1], lineNum)
+				
+				if (ConsoleDebugOutput):
+					frameDec.status()
+					
+				logMainL = lineTokenList+lineDecodedTokenList+frameDec.getLog()
+				logMainStr = ''
+				for logEntry in logMainL:
+					logMainStr += str(logEntry)+','
+				logMainStr += '\n'
+				
+				logDetailL = frameDec.getLogDetail()
+				logDetailStr = ''
+				if (logDetailL != []):
+					for logEntry in logDetailL:
+						logDetailStr += ',,,,,,,'+str(logEntry)+','+'\n'
+						
+				outfile.write(logMainStr)
+				outfile.write(logDetailStr)
+				
+				# apdu details will follow
+				if (procCmdA.isNewApdu):
+					apduData = procCmdA.getNewApdu()
+					#outfile.write(",,,,,,,,%s\n" %  str(" ".join(["{0:02x}".format(x) for x in apduData])))
+					#if (ConsoleDebugOutput):
+					#	print('New apdu ', str(" ".join(["{0:02x}".format(x) for x in apduData])))
+					frameDecApdu.newFrame(apduData, frameDec.frameSrc, lineNum)
+					
+					if (ConsoleDebugOutput):
+						print('APDU Frame status: ')
+						frameDecApdu.status()
+						
+					logMainL = frameDecApdu.getLog()
+					logMainStr = ''
+					for logEntry in logMainL:
+						logMainStr += ',,,,,,,,,'+str(logEntry)+','+'\n'
+					
+					logDetailL = frameDecApdu.getLogDetail()
+					logDetailStr = ''
+					if (logDetailL != []):
+						for logEntry in logDetailL:
+							logDetailStr += ',,,,,,,,,,'+str(logEntry)+','+'\n'
+							
+					outfile.write(logMainStr)
+					outfile.write(logDetailStr)
+			else:
+				print("Malformed line %d ignored" %(lineNum))
 
 	#for apduStr in procCmdA.getApdu():
 	#	outfileApdu.write(apduStr)
